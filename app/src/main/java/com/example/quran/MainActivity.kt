@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
         player = SimpleExoPlayer.Builder(this).build()
         for (i in 1..SOUAR_NUMBER) {
             val suraNumber = String.format("%03d", i)
-            val mp3Item = MediaItem.fromUri("https://server8.mp3quran.net/afs/${suraNumber}.mp3")
+            val mp3Item = MediaItem.fromUri("https://media.blubrry.com/muslim_central_quran/podcasts.qurancentral.com/mishary-rashid-alafasy/mishary-rashid-alafasy-${suraNumber}-muslimcentral.com.mp3")
             player?.addMediaItem(mp3Item)
         }
         player?.prepare()
