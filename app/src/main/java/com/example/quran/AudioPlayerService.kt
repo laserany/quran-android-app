@@ -62,6 +62,10 @@ class AudioPlayerService : Service() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
+        player?.stop()
+
+        // 2. Remove the notification from the foreground
+        stopForeground(true)
         // This triggers when you swipe the app away from the 'Recents' screen
         stopSelf() // This kills the service and the notification
     }
@@ -106,7 +110,7 @@ class AudioPlayerService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        return START_STICKY // Restart service if system kills it
+        return START_NOT_STICKY // Restart service if system kills it
     }
 
     override fun onDestroy() {
