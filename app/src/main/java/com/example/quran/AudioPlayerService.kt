@@ -61,13 +61,44 @@ class AudioPlayerService : Service() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        super.onTaskRemoved(rootIntent)
-        player?.stop()
+// 1. Save the state immediately
+        saveCurrentPosition()
 
-        // 2. Remove the notification from the foreground
-        stopForeground(true)
-        // This triggers when you swipe the app away from the 'Recents' screen
-        stopSelf() // This kills the service and the notification
+        // 2. Decide behavior:
+        // If you want the music to STOP when swiped away:
+        // stopSelf()
+
+        // If you want it to KEEP playing (like Spotify):
+        // Do nothing, but ensure your notification is in "Foreground" mode
+        super.onTaskRemoved(rootIntent)
+    }
+
+    private fun setupPlayer() {
+        player = SimpleExoPlayer.Builder(this).build()
+
+        player?.addListener(object : Player.Listener {
+            override fun onPositionDiscontinuity(
+                oldPosition: Player.PositionInfo,
+                newPosition: Player.PositionInfo,
+                reason: Int
+            ) {
+                saveCurrentPosition()
+            }
+
+            // Save whenever the user pauses or the track changes
+            override fun onPlaybackStateChanged(state: Int) {
+                saveCurrentPosition()
+            }
+        })
+    }
+
+    private fun saveCurrentPosition() {
+        player?.let {
+            sharedPreferences.edit()
+                .putInt(PREF_KEY_LAST_PLAYED_MEDIA_INDEX, it.currentWindowIndex)
+                .putLong(PREF_KEY_LAST_PLAYED_POSITION, it.currentPosition)
+                .apply() // .apply() is asynchronous and safer here
+        }
     }
 
     private fun createNotificationChannel() {
@@ -119,7 +150,7 @@ class AudioPlayerService : Service() {
             sharedPreferences.edit()
                 .putInt(PREF_KEY_LAST_PLAYED_MEDIA_INDEX, it.currentWindowIndex)
                 .putLong(PREF_KEY_LAST_PLAYED_POSITION, it.currentPosition)
-                .apply()
+                .commit()
             it.release()
         }
         playerNotificationManager?.setPlayer(null)
